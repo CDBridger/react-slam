@@ -377,7 +377,7 @@ export const useSlam = (): ISlam => {
 }
 
 export const withSlam = <P extends object>(
-    WrappedComponent: React.ComponentType<P & SlamProps>
+    WrappedComponent: React.ComponentType<P>
 ) => {
 
     invariant(
@@ -391,16 +391,18 @@ export const withSlam = <P extends object>(
         const ref = useRef<HTMLElement>(null);
         const registered = useRef(false);
 
+        const { delay, excludeChildren, constraint, restitution, initialAngularVelocity, ...componentProps } = props;
+
         useEffect(() => {
             if (ref.current && !registered.current) {
                 registered.current = true;
-                registerRigidBody(ref, props);
+                registerRigidBody(ref, { delay, excludeChildren, constraint, restitution, initialAngularVelocity });
             }
-        }, []);
+        }, [delay, excludeChildren, constraint, restitution, initialAngularVelocity, registerRigidBody]);
 
         return (
             <WrappedComponent
-                {...props}
+                {...componentProps as P}
                 ref={ref}
             />
         );
