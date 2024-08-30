@@ -1,0 +1,51 @@
+{
+  "name": "react-slam",
+  "description": "SLAM: A simple library for animating motion",
+  "version": "0.0.4",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint ."
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "main": "./dist/react-slam.umd.js",
+  "module": "./dist/react-slam.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/react-slam.es.js",
+      "require": "./dist/react-slam.umd.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./src/*": "./src/*"
+  },
+  "peerDependencies": {
+    "matter-js": ">=0.20.0",
+    "react": ">=17",
+    "react-dom": ">=17"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "@types/invariant": "^2",
+    "@types/matter-js": "^0.19.7",
+    "@types/node": "^22.5.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^9.9.0",
+    "eslint-plugin-react-hooks": "^5.1.0-rc.0",
+    "eslint-plugin-react-refresh": "^0.4.9",
+    "globals": "^15.9.0",
+    "typescript": "^5.5.3",
+    "typescript-eslint": "^8.0.1",
+    "vite": "^5.4.1",
+    "vite-plugin-dts": "^4.0.3"
+  },
+  "dependencies": {
+    "invariant": "^2.2.4"
+  }
+}
