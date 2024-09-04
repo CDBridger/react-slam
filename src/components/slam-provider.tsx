@@ -1,6 +1,6 @@
-import React, { Ref, RefObject } from 'react';
+import invariant from 'invariant';
 import Matter from 'matter-js';
-import {
+import React, {
     createContext,
     PropsWithChildren,
     useCallback,
@@ -9,7 +9,6 @@ import {
     useRef,
     useState,
 } from 'react';
-import invariant from 'invariant';
 
 const NO_CONTEXT = 'No Slam provider found';
 
@@ -123,6 +122,7 @@ export const SlamProvider: React.FC<SlamProviderProps> = ({ children, debug = fa
         World.add(engine.world, [floorRef.current, rightWallRef.current, leftWallRef.current]);
         setBounds(boxRef.current!.getBoundingClientRect());
         window.addEventListener('resize', handleResize);
+        window.addEventListener('scroll', handleResize);
 
         render.current = Render.create({
             canvas: canvasRef.current!,
@@ -261,48 +261,51 @@ export const SlamProvider: React.FC<SlamProviderProps> = ({ children, debug = fa
             World.clear(engine.world, true);
             Engine.clear(engine);
             window.removeEventListener('resize', handleResize);
+            window.removeEventListener('scroll', handleResize);
         };
     }, [running]);
 
     useEffect(() => {
         if (bounds) {
-            let { width, height } = bounds;
+            const { width, height } = bounds;
+            const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
 
             // Set the floor's position and size, and make it bouncy
             Matter.Body.setPosition(floorRef.current, {
-                x: width / 2,
-                y: height,
+                x: width / 2 + scrollX,
+                y: height + scrollY,
             });
 
             Matter.Body.setVertices(floorRef.current, [
-                { x: 0, y: height - floorThickness * 0.01 },
-                { x: width, y: height - floorThickness * 0.01 },
-                { x: width, y: height + floorThickness * 0.09 }, // Extend below the visible area
-                { x: 0, y: height + floorThickness * 0.09 },
+                { x: scrollX, y: height - floorThickness * 0.01 + scrollY },
+                { x: width + scrollX, y: height - floorThickness * 0.01 + scrollY },
+                { x: width + scrollX, y: height + floorThickness * 0.09 + scrollY }, // Extend below the visible area
+                { x: scrollX, y: height + floorThickness * 0.09 + scrollY },
             ]);
 
             Matter.Body.setPosition(rightWallRef.current, {
-                x: width,
-                y: height / 2,
+                x: width + scrollX,
+                y: height / 2 + scrollY,
             });
 
             Matter.Body.setPosition(leftWallRef.current, {
-                x: 0,
-                y: height / 2,
+                x: scrollX,
+                y: height / 2 + scrollY,
             });
 
             Matter.Body.setVertices(rightWallRef.current, [
-                { x: width - floorThickness * 0.01, y: 0 },
-                { x: width - floorThickness * 0.01, y: height },
-                { x: width + floorThickness * 0.99, y: height },
-                { x: width + floorThickness * 0.99, y: 0 },
+                { x: width - floorThickness * 0.01 + scrollX, y: scrollY },
+                { x: width - floorThickness * 0.01 + scrollX, y: height + scrollY },
+                { x: width + floorThickness * 0.99 + scrollX, y: height + scrollY },
+                { x: width + floorThickness * 0.99 + scrollX, y: scrollY },
             ]);
 
             Matter.Body.setVertices(leftWallRef.current, [
-                { x: -floorThickness * 0.01, y: 0 },
-                { x: -floorThickness * 0.01, y: height },
-                { x: -floorThickness * 0.99, y: height },
-                { x: -floorThickness * 0.99, y: 0 },
+                { x: -floorThickness * 0.01 + scrollX, y: scrollY },
+                { x: -floorThickness * 0.01 + scrollX, y: height + scrollY },
+                { x: -floorThickness * 0.99 + scrollX, y: height + scrollY },
+                { x: -floorThickness * 0.99 + scrollX, y: scrollY },
             ]);
 
             render.current!.canvas.width = width;
@@ -383,7 +386,7 @@ export const withSlam = <P extends object>(
     invariant(
         typeof WrappedComponent !== 'function' ||
         (WrappedComponent.prototype && WrappedComponent.prototype.isReactComponent),
-        `Looks like you're passing a function component \`${WrappedComponent.name}\` to \`withSlam\` function which supports only class components. Please wrap your function component with \`React.forwardRef()\` or use a class component instead.`
+        `Looks like you're passing a function component \`$ {WrappedComponent.name}\` to \`withSlam\` function which supports only class components. Please wrap your function component with \`React.forwardRef()\` or use a class component instead.`
     );
 
     const WithPhysics: React.FC<P & SlamProps> = (props) => {

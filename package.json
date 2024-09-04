@@ -1,7 +1,14 @@
 {
   "name": "react-slam",
   "description": "SLAM: A simple library for animating motion",
-  "version": "0.0.5",
+  "version": "0.0.6",
+  "license": "MIT",
+  "author": "Charles Bridger",
+  "homepage": "https://github.com/CDBridger/react-slam",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CDBridger/react-slam.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
