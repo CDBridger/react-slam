@@ -82,7 +82,6 @@ export const SlamProvider: React.FC<SlamProviderProps> = ({ children, debug = fa
 
     const render = useRef<Matter.Render>();
 
-    const [bounds, setBounds] = useState<DOMRect>();
     const floorRef = useRef<Matter.Body>(
         Bodies.rectangle(0, 0, 0, floorThickness, {
             isStatic: true,
@@ -113,16 +112,10 @@ export const SlamProvider: React.FC<SlamProviderProps> = ({ children, debug = fa
 
     const [running, setRunning] = useState(false);
 
-    const handleResize = useCallback(() => {
-        const constraints = boxRef.current!.getBoundingClientRect();
-        setBounds(constraints);
-    }, []);
-
     useEffect(() => {
         World.add(engine.world, [floorRef.current, rightWallRef.current, leftWallRef.current]);
-        setBounds(boxRef.current!.getBoundingClientRect());
-        window.addEventListener('resize', handleResize);
-        window.addEventListener('scroll', handleResize);
+        window.addEventListener('resize', onViewportChange);
+        window.addEventListener('scroll', onViewportChange);
 
         render.current = Render.create({
             canvas: canvasRef.current!,
@@ -134,6 +127,12 @@ export const SlamProvider: React.FC<SlamProviderProps> = ({ children, debug = fa
                 showMousePosition: debug,
             },
         });
+        onViewportChange();
+
+        return () => {
+            window.removeEventListener('resize', onViewportChange);
+            window.removeEventListener('scroll', onViewportChange);
+        }
     }, []);
 
     const startEngine = useCallback(() => {
@@ -260,58 +259,56 @@ export const SlamProvider: React.FC<SlamProviderProps> = ({ children, debug = fa
             Runner.stop(runner);
             World.clear(engine.world, true);
             Engine.clear(engine);
-            window.removeEventListener('resize', handleResize);
-            window.removeEventListener('scroll', handleResize);
+
         };
     }, [running]);
 
-    useEffect(() => {
-        if (bounds) {
-            const { width, height } = bounds;
-            const scrollX = window.scrollX;
-            const scrollY = window.scrollY;
+    const onViewportChange = () => {
+        const bounds = boxRef.current!.getBoundingClientRect();
+        const { width, height } = bounds;
+        const scrollX = window.scrollX;
+        const scrollY = window.scrollY;
 
-            // Set the floor's position and size, and make it bouncy
-            Matter.Body.setPosition(floorRef.current, {
-                x: width / 2 + scrollX,
-                y: height + scrollY,
-            });
+        // Set the floor's position and size, and make it bouncy
+        Matter.Body.setPosition(floorRef.current, {
+            x: width / 2 + scrollX,
+            y: height + scrollY,
+        });
 
-            Matter.Body.setVertices(floorRef.current, [
-                { x: scrollX, y: height - floorThickness * 0.01 + scrollY },
-                { x: width + scrollX, y: height - floorThickness * 0.01 + scrollY },
-                { x: width + scrollX, y: height + floorThickness * 0.09 + scrollY }, // Extend below the visible area
-                { x: scrollX, y: height + floorThickness * 0.09 + scrollY },
-            ]);
+        Matter.Body.setVertices(floorRef.current, [
+            { x: scrollX, y: height - floorThickness * 0.01 + scrollY },
+            { x: width + scrollX, y: height - floorThickness * 0.01 + scrollY },
+            { x: width + scrollX, y: height + floorThickness * 0.09 + scrollY }, // Extend below the visible area
+            { x: scrollX, y: height + floorThickness * 0.09 + scrollY },
+        ]);
 
-            Matter.Body.setPosition(rightWallRef.current, {
-                x: width + scrollX,
-                y: height / 2 + scrollY,
-            });
+        Matter.Body.setPosition(rightWallRef.current, {
+            x: width + scrollX,
+            y: height / 2 + scrollY,
+        });
 
-            Matter.Body.setPosition(leftWallRef.current, {
-                x: scrollX,
-                y: height / 2 + scrollY,
-            });
+        Matter.Body.setPosition(leftWallRef.current, {
+            x: scrollX,
+            y: height / 2 + scrollY,
+        });
 
-            Matter.Body.setVertices(rightWallRef.current, [
-                { x: width - floorThickness * 0.01 + scrollX, y: scrollY },
-                { x: width - floorThickness * 0.01 + scrollX, y: height + scrollY },
-                { x: width + floorThickness * 0.99 + scrollX, y: height + scrollY },
-                { x: width + floorThickness * 0.99 + scrollX, y: scrollY },
-            ]);
+        Matter.Body.setVertices(rightWallRef.current, [
+            { x: width - floorThickness * 0.01 + scrollX, y: scrollY },
+            { x: width - floorThickness * 0.01 + scrollX, y: height + scrollY },
+            { x: width + floorThickness * 0.99 + scrollX, y: height + scrollY },
+            { x: width + floorThickness * 0.99 + scrollX, y: scrollY },
+        ]);
 
-            Matter.Body.setVertices(leftWallRef.current, [
-                { x: -floorThickness * 0.01 + scrollX, y: scrollY },
-                { x: -floorThickness * 0.01 + scrollX, y: height + scrollY },
-                { x: -floorThickness * 0.99 + scrollX, y: height + scrollY },
-                { x: -floorThickness * 0.99 + scrollX, y: scrollY },
-            ]);
+        Matter.Body.setVertices(leftWallRef.current, [
+            { x: -floorThickness * 0.01 + scrollX, y: scrollY },
+            { x: -floorThickness * 0.01 + scrollX, y: height + scrollY },
+            { x: -floorThickness * 0.99 + scrollX, y: height + scrollY },
+            { x: -floorThickness * 0.99 + scrollX, y: scrollY },
+        ]);
 
-            render.current!.canvas.width = width;
-            render.current!.canvas.height = height;
-        }
-    }, [bounds]);
+        render.current!.canvas.width = width;
+        render.current!.canvas.height = height;
+    };
 
     const registerRigidBody = useCallback(
         (
